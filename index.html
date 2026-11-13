@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>地摊抓娃娃 · 微信小游戏竖屏预览</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#E8E0CE;color:#3B3630;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .stage{display:flex;gap:26px;align-items:flex-start;justify-content:center;padding:18px;flex-wrap:wrap}
+  .phoneWrap{width:390px;height:720px;flex:none}
+  .phone{width:390px;height:720px;position:relative;transform-origin:top left;border-radius:22px;overflow:hidden;
+    box-shadow:0 14px 42px rgba(60,48,30,.28);background:#F6F0E2}
+  /* 本地模拟激励视频：只在浏览器预览里出现，不会打进微信小游戏包 */
+  #adMock{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(12,10,9,.93);z-index:9;color:#FFF6E2;padding:22px;text-align:center}
+  #adMock .adBox{width:100%;max-width:310px;background:#211E1A;border:1px solid #5A5044;
+    border-radius:16px;padding:20px 18px}
+  #adMock .adTag{display:inline-block;background:#C6322B;color:#FFF3D0;border-radius:5px;
+    padding:2px 8px;font-size:11px;margin-bottom:10px}
+  #adMock h3{margin:4px 0 14px;font-size:20px;color:#F5C542}
+  #adMock .adScreen{height:96px;border-radius:10px;background:linear-gradient(135deg,#3B4A5A,#6B5B4A);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    color:#FFE9B0;font-size:13px;letter-spacing:2px}
+  #adMock .adBar{width:74%;height:6px;border-radius:3px;background:#F5C542;opacity:.85}
+  #adMock p{font-size:12px;color:#C9BFAE;line-height:1.6;margin:12px 0}
+  #adMock button{display:block;width:100%;margin:7px 0;padding:10px;border-radius:9px;cursor:pointer;
+    border:1px solid #6B6050;background:#2E2A24;color:#FFF6E2;font-size:13px;font-weight:bold}
+  #adMock button.primary{background:#C6322B;border-color:#C6322B;color:#FFF3D0}
+  #adMock button:hover{filter:brightness(1.15)}
+  canvas{display:block;width:390px;height:720px;touch-action:manipulation;cursor:pointer}
+  .side{width:290px;padding-top:6px;line-height:1.75;font-size:13px}
+  .side h1{font-size:19px;margin:0 0 6px;color:#C6322B}
+  .side .tag{display:inline-block;background:#C6322B;color:#FFF3D0;border-radius:5px;
+    padding:1px 8px;font-size:11px;margin-bottom:12px}
+  .side h2{font-size:14px;margin:18px 0 5px;color:#7A6A4E}
+  .side p{margin:5px 0;color:#5B544A}
+  .side ol{margin:6px 0;padding-left:19px;color:#5B544A}
+  .side code{background:#F7F1E2;padding:1px 5px;border-radius:4px;font-size:12px}
+  .btn{display:inline-block;border:1px solid #D6CBB2;background:#FFFDF6;border-radius:8px;
+    padding:6px 12px;margin:6px 6px 0 0;cursor:pointer;font-size:12px;color:#5B544A}
+  .btn:hover{background:#F5EBD6}
+  .note{margin-top:16px;font-size:12px;color:#8A8172;border-top:1px solid #DCD3C0;padding-top:10px}
+  #voiceState{font-weight:bold;color:#3B6D11}
+  @media(max-width:760px){.side{width:390px}.stage{gap:12px;padding:8px}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phoneWrap" id="wrap"><div class="phone" id="phone">
+    <canvas id="cv"></canvas>
+    <div id="adMock">
+      <div class="adBox">
+        <div class="adTag">本地模拟 · 不是真实广告</div>
+        <h3>激励视频广告</h3>
+        <div class="adScreen"><div class="adBar" id="adBar"></div><span>约 15–30 秒</span></div>
+        <p>真机上这一层由微信原生全屏广告接管，只有完整看完才会回调发币。这里为方便自测，可直接点下面三种结果。</p>
+        <button class="primary" id="adDone">看完了 → 发 20 币</button>
+        <button id="adSkip">中途关掉 → 不发币</button>
+        <button id="adErr">模拟加载失败 → 送 2 币</button>
+      </div>
+    </div>
+  </div></div>
+  <div class="side">
+    <h1>地摊抓娃娃 · 竖屏版 v2.1</h1>
+    <div class="tag">微信小游戏工程 · 浏览器预览</div>
+    <p><b>一个动作</b>：点机柜里任意一只梗娃，爪子就过去下爪。没有甩爪、没有节拍、没有连点、没有调参面板。</p>
+    <p><b>v2 精修三件套</b>：① 8 只原创 meme 梗娃（躺平猫 / 干饭狗 / 柠檬猫 / 暴躁狗 / 摆烂蛙 / 卷王鼠 / emo企鹅 / 暴富猫），每只带专属表情和随身道具，抓到时飘梗标签；② 老板改成具象东北大姨：花棉袄、盘头丸子、大金链子、小摊台 + 币罐 + 蒲扇；③ 机柜立体化。</p>
+    <p><b>v2.1 手感与空间修正</b>：柜内改成看得见的<b>立方体盒子</b>——后壁小矩形、四片梯形内壁、带透视网格的地板、八条棱线、前框立柱，娃娃影子投在地板上；修掉「娃娃被夹住后还留在底部、爪子空着上升再瞬移」的时序断裂，现在娃娃每帧都挂在爪下；整套演出从 3.58s 压到 <b>2.30s</b>，出货娃娃改为渐隐落洞、补娃空档归零。</p>
+    <p>玩家只看得到三样东西：<b>圈币 / 保底进度 / 图鉴</b>，剩下交给东北大姨说。</p>
+    <h2>语音</h2>
+    <p id="voiceState">东北话语音包加载中…</p>
+    <button class="btn" id="tryVoice">试听老板开场</button>
+    <button class="btn" id="toggleVoice">开关声音</button>
+    <p style="font-size:12px;color:#8A8172">16 条辽宁话（东北官话）「小蓓」预录音频，不是浏览器机械 TTS。改词重录见 <code>tools/gen_voice.py</code>。</p>
+    <h2>广告换币 · 现在就能试</h2>
+    <p>开局点一下<b>领 20 币</b>，抓完 10 把后会自动弹「看广告 · 再领 20 币」。本页用<b>模拟广告浮层</b>代替微信原生广告，三种结果都能亲手试：看完发 20 币、中途关掉不发、加载失败送 2 币。</p>
+    <p>真机上把后台拿到的 <code>adUnitId</code> 填进 <code>minigame/js/ad-config.js</code>，同一套逻辑自动切到真实激励视频；这层模拟浮层<b>不会进小游戏包</b>。</p>
+    <p>按微信规范，广告不是唯一续玩方式：面板可关闭，底部还有常驻「免费领 2 币」。</p>
+    <h2>怎么在微信里跑</h2>
+    <ol>
+      <li>装「微信开发者工具」，左侧选<b>小游戏</b> → 导入项目</li>
+      <li>目录选 <code>minigame/</code>（含 game.json 那层）</li>
+      <li>AppID 先选「测试号」即可预览；上传发布要换成自己的小游戏 AppID</li>
+    </ol>
+    <h2>两个版本共用一份逻辑</h2>
+    <p><code>minigame/js/core.js</code> 是纯逻辑 + 纯 Canvas 绘制，不含 DOM / wx / 浏览器 API；本页和 <code>game.js</code> 都只是壳。</p>
+    <p class="note">游戏内奖品与圈币均为虚拟道具，不充值、不兑换实物，不使用知名 IP 形象。概率与保底写在游戏内「规则 / 概率」页。</p>
+  </div>
+</div>
+
+<script src="minigame/audio/lines.js"></script>
+<script src="minigame/js/core.js"></script>
+<script>
+(function(){
+  'use strict';
+  var W=390,H=720;
+  var canvas=document.getElementById('cv'),wrap=document.getElementById('wrap'),phone=document.getElementById('phone');
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  var ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  function fit(){
+    var s=Math.min(1,(window.innerHeight-28)/H,(window.innerWidth-24)/W);
+    if(window.innerWidth>760)s=Math.min(1,(window.innerHeight-28)/H);
+    phone.style.transform='scale('+s+')';
+    wrap.style.width=(W*s)+'px';wrap.style.height=(H*s)+'px';
+  }
+  window.addEventListener('resize',fit);fit();
+
+  /* ---- 东北话语音包：优先真 mp3，缺文件或不支持时退回字幕 + 浏览器 TTS ---- */
+  var voiceEl=new Audio(),voiceOK=true,ttsOK=('speechSynthesis' in window);
+  var stateEl=document.getElementById('voiceState');
+  voiceEl.addEventListener('error',function(){voiceOK=false;setState();});
+  function setState(){
+    stateEl.textContent=voiceOK?'东北话语音包已就绪（16 条）：'+'zh-CN-liaoning-XiaobeiNeural'
+      :(ttsOK?'语音文件不可用，已降级为浏览器 TTS（机械音）':'语音文件不可用，仅字幕');
+    stateEl.style.color=voiceOK?'#3B6D11':'#C6322B';
+  }
+  setState();
+  function fallbackSpeak(text){
+    if(!ttsOK||!window.speechSynthesis)return;
+    try{
+      window.speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';u.rate=1.06;u.pitch=0.94;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  var unlocked=false,pending=null;   // 浏览器要求首次手势后才允许出声
+  function playVoice(id,text){
+    if(!unlocked){pending={id:id,text:text};return;}
+    if(!voiceOK){fallbackSpeak(text);return;}
+    try{
+      voiceEl.pause();voiceEl.src='minigame/audio/'+id+'.mp3';voiceEl.currentTime=0;
+      var p=voiceEl.play();
+      if(p&&p.catch)p.catch(function(){fallbackSpeak(text);});
+    }catch(e){fallbackSpeak(text);}
+  }
+  function unlock(){if(unlocked)return;unlocked=true;if(pending){var q=pending;pending=null;playVoice(q.id,q.text);}}
+
+  /* ---- 音效：Web Audio 现场合成 ---- */
+  var ac=null;
+  function audio(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return ac;}
+  var SFX={coin:[660,880,.10],motor:[180,120,.18],slip:[420,180,.22],miss:[220,150,.14],
+    win:[520,990,.30],blip:[520,620,.07],laugh:[330,440,.14],sigh:[300,190,.20]};
+  function playSfx(name){
+    var a=audio(),p=SFX[name];if(!a||!p)return;
+    try{
+      var o=a.createOscillator(),g=a.createGain();
+      o.type='sine';o.frequency.setValueAtTime(p[0],a.currentTime);
+      o.frequency.exponentialRampToValueAtTime(Math.max(60,p[1]),a.currentTime+p[2]);
+      g.gain.setValueAtTime(.08,a.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,a.currentTime+p[2]);
+      o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+p[2]+.02);
+    }catch(e){}
+  }
+
+  /* ---- 存档 ---- */
+  var KEY='claw_portrait_v1';
+  var storage={
+    get:function(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null;}},
+    set:function(v){try{localStorage.setItem(KEY,JSON.stringify(v));}catch(e){}}
+  };
+
+  /* ---- 本地模拟激励视频：三种结算结果都能亲手点一遍 ---- */
+  var adCb=null;
+  var adMock=document.getElementById('adMock');
+  function finishAd(res){
+    adMock.style.display='none';
+    var cb=adCb;adCb=null;
+    if(cb)cb(res);
+  }
+  var ads={
+    available:true,
+    show:function(done){ adCb=done; adMock.style.display='flex'; }
+  };
+  document.getElementById('adDone').addEventListener('click',function(){finishAd({status:'ok',ended:true});});
+  document.getElementById('adSkip').addEventListener('click',function(){finishAd({status:'ok',ended:false});});
+  document.getElementById('adErr').addEventListener('click',function(){finishAd({status:'error',errCode:1004});});
+
+  var Core=window.ClawCore;
+  if(!Core){
+    var warn=document.getElementById('voiceState');
+    warn.textContent='核心脚本未加载：请把本 HTML 与 minigame/ 目录放在同一层，不要单独另存 HTML。';
+    warn.style.color='#C6322B';
+    return;
+  }
+  var game=Core.createGame({voice:playVoice,sfx:playSfx,storage:storage,ads:ads});
+  window.__clawGame=game; // 供冒烟测试与调试
+
+  document.getElementById('tryVoice').addEventListener('click',function(){
+    audio();unlock();playVoice('v01','来啦老弟！两币一把，抓着算你本事！');
+    game.say('greet',{dur:3.0});
+  });
+  document.getElementById('toggleVoice').addEventListener('click',function(){
+    game.voiceOn=!game.voiceOn;
+    if(!game.voiceOn){voiceEl.pause();if(window.speechSynthesis)window.speechSynthesis.cancel();}
+  });
+
+  function point(e){
+    var r=canvas.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};
+  }
+  canvas.addEventListener('pointerdown',function(e){
+    e.preventDefault();audio();unlock();
+    var p=point(e);game.tap(p.x,p.y);
+  });
+
+  var last=0;
+  function frame(ts){
+    var dt=last?(ts-last)/1000:.016;last=ts;
+    game.update(dt);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    game.draw(ctx);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
